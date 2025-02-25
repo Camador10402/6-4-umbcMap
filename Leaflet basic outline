@@ -16,33 +16,44 @@
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        // Initialize the map
+        // Define actual image size
+        var imageWidth = 2550;
+        var imageHeight = 3037;
+
+        // Scale factor to make it easier to work with
+        var scaleFactor = 0.4;  // Adjust this if needed
+        var scaledWidth = imageWidth * scaleFactor;
+        var scaledHeight = imageHeight * scaleFactor;
+
+        // Initialize the map with appropriate bounds
         var map = L.map('map', {
-            minZoom: 1,
+            minZoom: -2, // Allow more zooming out
             maxZoom: 5,
-            center: [0, 0], // Adjust if needed
-            zoom: 2,
+            center: [scaledHeight / 2, scaledWidth / 2], // Center the map properly
+            zoom: -1, // Start zoomed out
             crs: L.CRS.Simple
         });
-        
-        // Load your campus map PNG
-        var imageUrl = 'campus-map.png'; // Replace with actual image path
-        var imageBounds = [[-500, -500], [500, 500]]; // Adjust based on map dimensions
+
+        // Load the scaled campus map PNG
+        var imageUrl = 'umbc_map.png.jpg';
+        var imageBounds = [[0, 0], [scaledHeight, scaledWidth]];
+
         L.imageOverlay(imageUrl, imageBounds).addTo(map);
         map.fitBounds(imageBounds);
-        
-        // Example Markers (entrances)
-        L.marker([0, 0]).addTo(map)
-            .bindPopup("Main Entrance");
-        
-        // Example Polygon (building outline)
+
+        // Scale the Engineering Building coordinates
+        function scaleCoordinates(coord) {
+            return [scaledHeight - (coord[0] * scaleFactor), coord[1] * scaleFactor];
+        }
+
+        // Engineering Building Polygon
         L.polygon([
-            [-100, -100],
-            [-100, 100],
-            [100, 100],
-            [100, -100]
-        ]).addTo(map)
-        .bindPopup("Building 1 - Admin Offices");
+            scaleCoordinates([1350, 1000]), // Bottom-left
+            scaleCoordinates([1350, 900]), // Bottom-right
+            scaleCoordinates([1260, 900]),  // Top-right
+            scaleCoordinates([1260, 1000])   // Top-left
+        ], {color: "blue", fillOpacity: 0.4}).addTo(map)
+        .bindPopup("Engineering Building");
     </script>
 </body>
 </html>
