@@ -6,14 +6,39 @@
     <title>Campus Map Test</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
         #map {
             height: 100vh;
             width: 100%;
         }
+        .home-button {
+            position: absolute;
+            top: 10px;
+            right: 10px; /* Moved to the top-right */
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            z-index: 1000;
+        }
+        .home-button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
+    <!-- Back to Home Button -->
+    <a href="home_page.html" class="home-button">Back to Home</a>
+
     <div id="map"></div>
+    
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         // Define actual image size
@@ -21,7 +46,7 @@
         var imageHeight = 3037;
 
         // Scale factor to make it easier to work with
-        var scaleFactor = 0.4;  // Adjust this if needed
+        var scaleFactor = 0.6;  // Adjust this if needed
         var scaledWidth = imageWidth * scaleFactor;
         var scaledHeight = imageHeight * scaleFactor;
 
@@ -52,8 +77,8 @@
             scaleCoordinates([1350, 900]), // Bottom-right
             scaleCoordinates([1260, 900]),  // Top-right
             scaleCoordinates([1260, 1000])   // Top-left
-        ], {color: "blue", fillOpacity: 0.4}).addTo(map)
-        .bindPopup("Engineering Building");
+        ], {color: "blue", fillOpacity: 0.2}).addTo(map)
+        .bindPopup("Engineering Building inside this building are multiple classes with some on the first floor and some on the second floor");
     </script>
 </body>
 </html>
