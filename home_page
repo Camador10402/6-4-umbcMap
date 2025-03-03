@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Maps Home</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: #f4f4f4;
+    }
+    header {
+      background-color: #333;
+      color: #fff;
+      padding: 1rem 0;
+      margin-bottom: 2rem;
+    }
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: auto;
+    }
+    /* Flexbox container for maps and info boxes */
+    .maps-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    .map-section {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .info-box {
+      flex: 1;
+      max-width: 250px;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      text-align: left;
+    }
+    .map-link {
+      flex: 1;
+      min-width: 300px;
+      max-width: 500px;
+    }
+    .map-link img {
+      width: 100%;
+      height: auto;
+      border: 3px solid #ccc;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+    .map-link img:hover {
+      transform: scale(1.05);
+    }
+    /* Responsive layout for smaller screens */
+    @media (max-width: 900px) {
+      .map-section {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .info-box {
+        max-width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Welcome to the Campus Maps Portal</h1>
+  </header>
+  <div class="container">
+    <!-- Flex container for maps and descriptions -->
+    <div class="maps-container">
+      <!-- First Map Section (Outlined Building Information) -->
+      <div class="map-section">
+        <div class="info-box">
+          <h3>About This Map</h3>
+          <p>This map highlights all the outlined buildings on campus, showing different building functions, and which building you should visit depending on your needs.</p>
+        </div>
+        <div class="map-link">
+          <a href="building_information_map_page.html">
+            <img src="umbc_map.png.jpg" alt="Outlined Building Information">
+          </a>
+          <h2>Outlined Building Information Map</h2>
+        </div>
+      </div>
+
+      <!-- Second Map Section (GPS Map) -->
+      <div class="map-section">
+        <div class="map-link">
+          <a href="gps_map_page.html">
+            <img src="umbc_map.png.jpg" alt="GPS Map">
+          </a>
+          <h2>GPS Map</h2>
+        </div>
+        <div class="info-box">
+          <h3>About This Map</h3>
+          <p>This interactive GPS-based map helps students navigate campus locations in real time.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
