@@ -1,101 +1,130 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campus Map Test</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
-        #map {
-            height: 100vh;
-            width: 100%;
-        }
-        .home-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: #007BFF;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            text-decoration: none;
-            z-index: 1000;
-        }
-        .home-button:hover {
-            background-color: #0056b3;
-        }
-    </style>
-</head>
-<body>
-    <a href="home_page.html" class="home-button">Back to Home</a>
-    <div id="map"></div>
-    
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script>
-        var imageWidth = 1719;
-        var imageHeight = 2047;
-        var scaleFactor = 0.6;
-        var scaledWidth = imageWidth * scaleFactor;
-        var scaledHeight = imageHeight * scaleFactor;
-
-        var map = L.map('map', {
-            minZoom: -2,
-            maxZoom: 5,
-            center: [scaledHeight / 2, scaledWidth / 2],
-            zoom: -1,
-            crs: L.CRS.Simple
-        });
-
-        var imageUrl = 'Umbc_map.jpg';
-        var imageBounds = [[0, 0], [scaledHeight, scaledWidth]];
-
-        L.imageOverlay(imageUrl, imageBounds).addTo(map);
-        map.fitBounds(imageBounds);
-
-        function scaleCoordinates(coord) {
-            return [scaledHeight - (coord[1] * scaleFactor), coord[0] * scaleFactor];
-        }
-
-        var buildingBounds = {
-            "Greenhouse": [[515, 490], [560, 525]],
-            "Walker Avenue Apartments": [[380, 470], [440, 530]],
-            "West Hill Apartments": [[580, 350], [640, 410]],
-            "Terrace Apartments": [[700, 400], [760, 460]],
-            "Hillside Apartments": [[805, 350], [865, 410]],
-            "Central Plant": [[515, 570], [560, 630]],
-            "Albin O. Kuhn Library & Gallery": [[720, 570], [780, 630]],
-            "Army ROTC": [[200, 510], [260, 570]],
-            "Baltimore County Police": [[250, 410], [310, 480]],
-            "Baltimore County Courthouse": [[290, 310], [350, 380]],
-            "Alumni House": [[180, 600], [240, 660]]
-        };
-
-        var descriptions = {
-            "Greenhouse": "A research facility supporting plant science and biology studies.",
-            "Walker Avenue Apartments": "Apartment-style housing for upperclassmen with modern amenities.",
-            "West Hill Apartments": "Residential community offering suite-style living with study spaces.",
-            "Terrace Apartments": "Comfortable student apartments close to major campus facilities.",
-            "Hillside Apartments": "A quiet residential area for students, surrounded by greenery.",
-            "Central Plant": "The heart of UMBC's heating and cooling system operations.",
-            "Albin O. Kuhn Library & Gallery": "The main campus library, offering study spaces and research resources.",
-            "Army ROTC": "Training center for students pursuing leadership and military careers.",
-            "Baltimore County Police": "Local law enforcement office ensuring campus safety.",
-            "Baltimore County Courthouse": "Government facility for legal and administrative matters.",
-            "Alumni House": "A space dedicated to UMBC alumni networking and events."
-        };
-
-        Object.keys(buildingBounds).forEach(function(building) {
-            var bounds = buildingBounds[building].map(scaleCoordinates);
-            L.rectangle(bounds, {color: "blue", weight: 2, fillOpacity: 0.2}).addTo(map)
-                .bindPopup("<b>" + building + "</b><br>" + descriptions[building]);
-        });
-    </script>
-</body>
-</html>
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Campus Map Test</title>
+     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+     <style>
+         body {
+             margin: 0;
+             padding: 0;
+         }
+         #map {
+             height: 100vh;
+             width: 100%;
+         }
+         .home-button {
+             position: absolute;
+             top: 10px;
+             right: 10px;
+             background-color: #007BFF;
+             color: white;
+             padding: 10px 15px;
+             border: none;
+             border-radius: 5px;
+             font-size: 16px;
+             cursor: pointer;
+             text-decoration: none;
+             z-index: 1000;
+         }
+         .home-button:hover {
+             background-color: #0056b3;
+         }
+     </style>
+ </head>
+ <body>
+     <a href="home_page.html" class="home-button">Back to Home</a>
+     <div id="map"></div>
+     
+     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+     <script>
+         var imageWidth = 1719;
+         var imageHeight = 2047;
+         var scaleFactor = 0.6;
+         var scaledWidth = imageWidth * scaleFactor;
+         var scaledHeight = imageHeight * scaleFactor;
+ 
+         var map = L.map('map', {
+             minZoom: -2,
+             maxZoom: 5,
+             center: [scaledHeight / 2, scaledWidth / 2],
+             zoom: -1,
+             crs: L.CRS.Simple
+         });
+ 
+         var imageUrl = 'Umbc_map.jpg';
+         var imageBounds = [[0, 0], [scaledHeight, scaledWidth]];
+ 
+         L.imageOverlay(imageUrl, imageBounds).addTo(map);
+         map.fitBounds(imageBounds);
+ 
+         function scaleCoordinates(coord) {
+             return [scaledHeight - (coord[1] * scaleFactor), coord[0] * scaleFactor];
+         }
+ 
+         var buildingBounds = {
+             "Greenhouse": [[515, 490], [560, 525]],
+             "Walker Avenue Apartments": [[380, 470], [440, 530]],
+             "West Hill Apartments": [[580, 350], [640, 410]],
+             "Terrace Apartments": [[700, 400], [760, 460]],
+             "Hillside Apartments": [[805, 350], [865, 410]],
+             "Central Plant": [[515, 570], [560, 630]],
+             "Albin O. Kuhn Library & Gallery": [[720, 570], [780, 630]],
+             "Army ROTC": [[200, 510], [260, 570]],
+             "Baltimore County Police": [[250, 410], [310, 480]],
+             "Baltimore County Courthouse": [[290, 310], [350, 380]],
+             "Alumni House": [[180, 600], [240, 660]],
+			 
+			 //yafet additions
+			 "Erickson Hall": [[825, 470], [920, 550]],
+			 "Chesapeaske Hall": [[1040, 560], [950, 490]],
+			 "Harbor Hall": [[1030, 410], [940, 480]],
+			 "Susquehanna Hall": [[1030, 610], [940, 640]],
+			 "True Grit's": [[1050, 530], [1090, 590]],
+			 "Potomac Hall": [[1110, 500], [1160, 570]],
+			 "Patapsco Hall": [[1110, 580], [1210, 630]],
+			 "Student Development & Success Center": [[940, 570], [990, 605]],
+			 "Public Policy Building": [[950, 670], [1020, 690]],
+			 "Physics Building": [[950, 730], [990, 790]],
+			 "The Commons": [[790, 730], [890, 770]],
+			 "Academic Services Building": [[850, 825] , [920, 880]]
+			 
+         };
+ 
+         var descriptions = {
+             "Greenhouse": "A research facility supporting plant science and biology studies.",
+             "Walker Avenue Apartments": "Apartment-style housing for upperclassmen with modern amenities.",
+             "West Hill Apartments": "Residential community offering suite-style living with study spaces.",
+             "Terrace Apartments": "Comfortable student apartments close to major campus facilities.",
+             "Hillside Apartments": "A quiet residential area for students, surrounded by greenery.",
+             "Central Plant": "The heart of UMBC's heating and cooling system operations.",
+             "Albin O. Kuhn Library & Gallery": "The main campus library, offering study spaces and research resources.",
+             "Army ROTC": "Training center for students pursuing leadership and military careers.",
+             "Baltimore County Police": "Local law enforcement office ensuring campus safety.",
+             "Baltimore County Courthouse": "Government facility for legal and administrative matters.",
+             "Alumni House": "A space dedicated to UMBC alumni networking and events.",
+			 
+			 //yafet additions
+			 "Erickson Hall": "Location of the Division of Student affairs, handles the UMBC residential life.",
+			 "Chesapeake Hall": "Home to the center for Women In Technology Living-Learning Community; A quiet lifestyle community located on the third floor.",
+			 "Harbor Hall": "Home to several of the Living Learning Communities; Humanities, Intercultural Living Exchange, Visual and Performing Arts, Women Involved in Learning and Leadership.",
+			 "Susquehanna Hall": "Home to the Honors College Living Learning Community and our first-year Meyerhoff Scholars.",
+			 "True Grit's": "UMBC's Dining Hall, provides breakfast, lunch, and dinner.",
+			 "Potomac Hall": "UMBC's only nine month residence hall.",
+			 "Patapsco Hall": "A LEED-certified building and home to several of our Living Learning Communities: Discovery Scholars and STEM. A quiet lifestyle community is located on the ground floor.",
+			 "Student Development & Success Center": "N/A",
+			 "Public Policy Building": "Home to the School of Public Policy.",
+			 "Physics Building": "Home to the department of Physics.",
+			 "The Commons": "Hub of the student life at UMBC. In the middle of campus, the place to go in between classes.",
+			 "Academic Services Building": "provides centralized programmatic and systematic support to all credit and non-credit programs."
+         };
+ 
+         Object.keys(buildingBounds).forEach(function(building) {
+             var bounds = buildingBounds[building].map(scaleCoordinates);
+             L.rectangle(bounds, {color: "blue", weight: 2, fillOpacity: 0.2}).addTo(map)
+                 .bindPopup("<b>" + building + "</b><br>" + descriptions[building]);
+         });
+     </script>
+ </body>
+ </html>
