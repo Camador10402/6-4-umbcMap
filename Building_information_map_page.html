@@ -151,12 +151,30 @@
 			 "Performing Arts and Humanities Building": "Home to departments like Ancient Studies, Dance, English, Music, Philosophy, and Theatre. Includes the Earl and Darielle Linehan Concert Hall, a 375-seat venue for performances."
 			 
          };
+
+	var entrancePoints = {
+		"Engineering Entrance": [665, 880], "Engineering Entrance_1": [610, 880], "Engineering Entrance_2": [635, 850], "Engineering Entrance_3": [635, 910],
+	        "RAC Entrance": [810, 1030],
+	        "Fine Arts Entrance": [640, 800],
+	};
  
          Object.keys(buildingBounds).forEach(function(building) {
              var bounds = buildingBounds[building].map(scaleCoordinates);
              L.rectangle(bounds, {color: "blue", weight: 2, fillOpacity: 0.2}).addTo(map)
                  .bindPopup("<b>" + building + "</b><br>" + descriptions[building]);
          });
+
+	Object.keys(entrancePoints).forEach(function(entrance) {
+		var coord = scaleCoordinates(entrancePoints[entrance]); // Scale coordinates
+		L.circleMarker(coord, {
+		radius: 3, // Small dot size
+		color: "red", // Temporary visibility
+		fillColor: "red",
+		fillOpacity: 1,
+		interactive: false // Non-clickable
+	}).addTo(map);
+});
+	     
      </script>
  </body>
  </html>
