@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UMBC GPS Campus Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+	  .home-button {
+	  position: absolute;
+	  top: 10px;
+	  right: 10px;
+	  background-color: #007BFF;
+	  color: white;
+	  padding: 10px 15px;
+	  border: none;
+	  border-radius: 5px;
+	  font-size: 16px;
+	  cursor: pointer;
+	  text-decoration: none;
+	  z-index: 1000;
+	}
+	.home-button:hover {
+	  background-color: #0056b3;
+	}
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    #map {
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+<a href="home_page.html" class="home-button">Back to Home</a>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  // Initialize the map centered around UMBC (approx)
+  var map = L.map('map', {
+  center: [39.2557, -76.7110],
+  zoom: 17,
+  maxZoom: 22, // allows deeper zoom-in
+  minZoom: 14  // prevents zooming too far out
+});
+
+  // Load OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+	maxZoom: 22 // Need to match this to the new max zoom
+  }).addTo(map);
+
+
+
+  // Entrance coordinates
+  var entrancePoints = {
+	"Retrivers Activities Center(RAC) entrance 1": [39.252382, -76.712750],  "Retrivers Activities Center(RAC) entrance 2": [39.253113, -76.712750],
+	
+	"Administration Building entrance 1": [39.252947, -76.713367], "Administration Building entrance 2": [39.253068, -76.713313], "Administration Building entrance 3": [39.252917, -76.712948],
+	
+	"Sondheim Hall entrance 1": [39.253266, -76.713004], "Sondheim Hall entrance 2": [39.253702, -76.712822], "Sondheim Hall entrance 3":[39.253732, -76.712656],
+	
+	"Math and Psychology Building entrance 1": [39.253896, -76.712670], "Math and Psychology Building entrance 1": [39.254349, -76.712460],
+	
+	"Information Technology Engineering Building entrance 1": [39.253964, -76.713831], "Information Technology Engineering Building entrance 2": [39.253730, -76.713941], 
+	"Information Technology Engineering Building entrance 3": [39.253557, -76.714417], "Information Technology Engineering Building entrance 4": [39.254148, -76.714205],
+	"Information Technology Engineering Building entrance 5": [39.254194, -76.714472],
+	
+	"Engineering Building entrance 1": [39.254478, -76.713619], "Engineering Building entrance 2": [39.254389, -76.713664], "Engineering Building entrance 3": [39.254185, -76.713919],
+	"Engineering Building entrance 4": [39.254281, -76.714179], "Engineering Building entrance 5": [39.254565, -76.714319], "Engineering Building entrance 6": [39.254672, -76.714273],
+	"Engineering Building entrance 7": [39.254781, -76.713888],
+	
+	"Meyerhoff Building entrance 1": [39.254659, -76.712594], "Meyerhoff Building entrance 2": [39.254786, -76.713206], "Meyerhoff Building entrance 3": [39.255247, -76.712991],
+	"Meyerhoff Building entrance 4": [39.255061, -76.712416], "Meyerhoff Building entrance 5": [39.254824, -76.712452],
+	
+	"Fine Arts Building entrance 1": [39.255212, -76.713242], "Fine Arts Building entrance 2": [39.254923, -76.713373], "Fine Arts Building entrance 3": [39.254879, -76.713700],
+	"Fine Arts Building entrance 4": [39.255461, -76.713920], "Fine Arts Building entrance 5": [39.255406, -76.713452], "Fine Arts Building entrance 6": [39.255092, -76.714089]
+  };
+
+  // Dictionary to store invisible markers for future toggling
+  var entranceMarkers = {};
+
+  // Layer group to manage entrance markers
+  var entranceLayer = L.layerGroup().addTo(map);
+
+  // Add invisible markers to map
+  Object.entries(entrancePoints).forEach(([name, coord]) => {
+    var marker = L.circleMarker(coord, {
+      radius: 5,
+      color: 'blue',
+      fillColor: 'blue',
+      fillOpacity: 1,
+      opacity: 0,          // invisible
+      interactive: false   // not clickable
+    }).addTo(entranceLayer);
+
+    entranceMarkers[name] = marker; // Save reference
+  });
+
+  // === Map Click Logger ===
+  map.on('click', function(e) {
+    var lat = e.latlng.lat.toFixed(6);
+    var lng = e.latlng.lng.toFixed(6);
+    alert(`Clicked at: [${lat}, ${lng}]`);
+  });
+
+
+  L.polyline(sidewalkPath, {
+    color: 'orange',
+    weight: 4,
+    opacity: 0.7
+  }).addTo(map);
+
+  // === Example: Show a marker when selected as destination ===
+  // entranceMarkers["Library Entrance"].setStyle({ opacity: 1, fillOpacity: 0.9 });
+
+</script>
+</body>
+</html>
