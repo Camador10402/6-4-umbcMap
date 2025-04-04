@@ -39,6 +39,7 @@
 <div id="map"></div>
 <a href="home_page.html" class="home-button">Back to Home</a>
 
+<script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
   // Initialize the map centered around UMBC (approx)
@@ -63,7 +64,7 @@
 	
 	"Administration Building entrance 1": [39.252947, -76.713367], "Administration Building entrance 2": [39.253068, -76.713313], "Administration Building entrance 3": [39.252917, -76.712948],
 	
-	"Sondheim Hall entrance 1": [39.253266, -76.713004], "Sondheim Hall entrance 2": [39.253702, -76.712822], "Sondheim Hall entrance 3":[39.253732, -76.712656],
+	"Sondheim Hall entrance 1": [39.253270, -76.713018], "Sondheim Hall entrance 2": [39.253702, -76.712822], "Sondheim Hall entrance 3":[39.253732, -76.712656], "Sondheim Hall entrance 3": [39.253202, -76.712916],
 	
 	"Math and Psychology Building entrance 1": [39.253896, -76.712670], "Math and Psychology Building entrance 1": [39.254349, -76.712460],
 	
@@ -79,7 +80,8 @@
 	"Meyerhoff Building entrance 4": [39.255061, -76.712416], "Meyerhoff Building entrance 5": [39.254824, -76.712452],
 	
 	"Fine Arts Building entrance 1": [39.255212, -76.713242], "Fine Arts Building entrance 2": [39.254923, -76.713373], "Fine Arts Building entrance 3": [39.254879, -76.713700],
-	"Fine Arts Building entrance 4": [39.255461, -76.713920], "Fine Arts Building entrance 5": [39.255406, -76.713452], "Fine Arts Building entrance 6": [39.255092, -76.714089]
+	"Fine Arts Building entrance 4": [39.255461, -76.713920], "Fine Arts Building entrance 5": [39.255406, -76.713452], "Fine Arts Building entrance 6": [39.255092, -76.714089],
+	
   };
 
   // Dictionary to store invisible markers for future toggling
@@ -109,12 +111,68 @@
     alert(`Clicked at: [${lat}, ${lng}]`);
   });
 
+  
+	let sidewalkData;
+	fetch('umbc_sidewalks.geojson')
+	  .then(res => res.json())
+	  .then(data => {
+		sidewalkData = data;
+		L.geoJSON(data, {
+		  style: {
+			color: 'green',
+			weight: 3,
+			opacity: 0.7
+		  }
+		}).addTo(map);
+		
+		connectEntrancesToSidewalks();
+	  });
+	  
+	fetch('umbc_steps.geojson')
+	  .then(res => res.json())
+	  .then(data => {
+		L.geoJSON(data, {
+		  style: {
+			color: 'purple',
+			weight: 3,
+			dashArray: '4',
+			opacity: 0.7
+		  }
+		}).addTo(map);
+	  });
+	  
+	function connectEntrancesToSidewalks() {
+	  Object.entries(entrancePoints).forEach(([name, coord]) => {
+		const entrancePoint = turf.point([coord[1], coord[0]]); // GeoJSON format is [lng, lat]
 
-  L.polyline(sidewalkPath, {
-    color: 'orange',
-    weight: 4,
-    opacity: 0.7
-  }).addTo(map);
+		let closestPoint = null;
+		let minDist = Infinity;
+
+		sidewalkData.features.forEach(feature => {
+		  if (feature.geometry.type === "LineString") {
+			const snapped = turf.nearestPointOnLine(feature, entrancePoint);
+			const dist = turf.distance(entrancePoint, snapped);
+			if (dist < minDist) {
+			  minDist = dist;
+			  closestPoint = snapped;
+			}
+		  }
+		});
+
+		if (closestPoint) {
+		  const snappedLatLng = [closestPoint.geometry.coordinates[1], closestPoint.geometry.coordinates[0]];
+		  
+		  // Optional: draw a line from entrance to the snapped point
+		  L.polyline([coord, snappedLatLng], {
+			color: 'blue',
+			weight: 2,
+			dashArray: '5,5',
+			opacity: 0.5
+		  }).addTo(map);
+		}
+	  });
+	}
+
 
   // === Example: Show a marker when selected as destination ===
   // entranceMarkers["Library Entrance"].setStyle({ opacity: 1, fillOpacity: 0.9 });
