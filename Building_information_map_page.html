@@ -53,7 +53,7 @@
              crs: L.CRS.Simple
          });
  
-         var imageUrl = 'Umbc_map.jpg';
+         var imageUrl = 'umbc_map.jpg';
          var imageBounds = [[0, 0], [scaledHeight, scaledWidth]];
  
          L.imageOverlay(imageUrl, imageBounds).addTo(map);
@@ -178,7 +178,7 @@
  
          Object.keys(buildingBounds).forEach(function(building) {
              var bounds = buildingBounds[building].map(scaleCoordinates);
-             L.rectangle(bounds, {color: "blue", weight: 2, fillOpacity: 0.2}).addTo(map)
+             L.rectangle(bounds, {color: "transparent", weight: 2, fillOpacity: 0.2}).addTo(map)
                  .bindPopup("<b>" + building + "</b><br>" + descriptions[building]);
          });
 
