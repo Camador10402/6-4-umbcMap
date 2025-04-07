@@ -1,119 +1,198 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UMBC Maps Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(to bottom right, #f4f6f9, #e9eef5);
-      color: #333;
-    }
+ <html lang="en">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Campus Map Test</title>
+     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+     <style>
+         body {
+             margin: 0;
+             padding: 0;
+         }
+         #map {
+             height: 100vh;
+             width: 100%;
+         }
+         .home-button {
+             position: absolute;
+             top: 10px;
+             right: 10px;
+             background-color: #007BFF;
+             color: white;
+             padding: 10px 15px;
+             border: none;
+             border-radius: 5px;
+             font-size: 16px;
+             cursor: pointer;
+             text-decoration: none;
+             z-index: 1000;
+         }
+         .home-button:hover {
+             background-color: #0056b3;
+         }
+     </style>
+ </head>
+ <body>
+     <a href="home_page.html" class="home-button">Back to Home</a>
+     <div id="map"></div>
+     
+     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+     <script>
+         var imageWidth = 1719;
+         var imageHeight = 2047;
+         var scaleFactor = 0.6;
+         var scaledWidth = imageWidth * scaleFactor;
+         var scaledHeight = imageHeight * scaleFactor;
+ 
+         var map = L.map('map', {
+             minZoom: -2,
+             maxZoom: 5,
+             center: [scaledHeight / 2, scaledWidth / 2],
+             zoom: -1,
+             crs: L.CRS.Simple
+         });
+ 
+         var imageUrl = 'Umbc_map.jpg';
+         var imageBounds = [[0, 0], [scaledHeight, scaledWidth]];
+ 
+         L.imageOverlay(imageUrl, imageBounds).addTo(map);
+         map.fitBounds(imageBounds);
+ 
+         function scaleCoordinates(coord) {
+             return [scaledHeight - (coord[1] * scaleFactor), coord[0] * scaleFactor];
+         }
+ 
+         var buildingBounds = {
+            //Daniel additions
+             "Greenhouse": [[515, 490], [560, 525]],
+             "Walker Avenue Apartments": [[430, 355], [510, 430]],
+             "Walker Avenue Apartments 2": [[365, 440], [460, 540]],
+             "West Hill Apartments": [[550, 350], [660, 410]],
+             "West Hill Apartments 2": [[530, 410], [630, 460]],
+             "Terrace Apartments": [[700, 410], [818, 460]],
+             "Terrace Apartments 2": [[685, 460], [820, 500]],
+             "Apartment Community Center": [[635, 450], [680, 485]],
+             "Hillside Apartments": [[818, 330], [920, 440]],
+             "Central Plant": [[515, 570], [560, 630]],
+             "Albin O. Kuhn Library & Gallery": [[710, 550], [810, 610]],
+             "Albin O. Kuhn Library & Gallery 2": [[680, 610], [780, 670]],
+             "Army ROTC": [[200, 510], [260, 570]],
+             "Baltimore County Police": [[250, 410], [310, 480]],
+             "Baltimore County Courthouse": [[290, 310], [350, 380]],
+             "Baltimore County Courthouse 2": [[350, 310], [410, 380]],
+             "Alumni House": [[180, 600], [240, 650]],
+			 
+			 //yafet additions
+			 "Erickson Hall": [[825, 470], [920, 550]],
+			 "Chesapeake Hall": [[1030, 560], [950, 490]],
+			 "Harbor Hall": [[1030, 410], [940, 480]],
+			 "Susquehanna Hall": [[1030, 610], [940, 640]],
+			 "Susquehanna Hall 2": [[1000, 565], [1030, 610]],
+			 "True Grit's": [[1035, 525], [1100, 610]],
+			 "Potomac Hall": [[1105, 490], [1180, 570]],
+			 "Patapsco Hall": [[1110, 570], [1210, 630]],
+			 "Student Development & Success Center": [[940, 570], [990, 605]],
+			 "Public Policy Building": [[950, 665], [1020, 695]],
+			 "Physics Building": [[950, 730], [990, 790]],
+			 "The Commons": [[790, 725], [890, 770]],
+			 "The Commons 2": [[850, 770], [890, 810]],
+			 "Academic Services Building": [[850, 825] , [920, 880]],
 
-    header {
-      background: #0b3d91;
-      color: white;
-      padding: 2rem 1rem;
-      text-align: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
+			 //Christian Re additions
+			 "Administration Building": [[710, 990], [750, 1040]],
+			 "Retriever Activities Center": [[765, 1000], [855, 1055]], "Retriever Activities Center(RAC)": [[785, 945], [855, 1055]],
+			 "Sondheim Hall": [[755, 985], [780, 920]],
+			 "Math & Psychology Building": [[755, 910], [780, 850]],
+			 "Biological Sciences Building": [[755, 840], [780, 730]],
+			 "Lecture Hall 1": [[782, 805], [805, 780]],
+			 "Sherman Hall": [[685, 985], [740, 920]],
+			 "Information Technology Engineering Building(ITE)": [[610, 995], [670, 922]],
+			 "Engineering Building": [[610, 912], [670, 850]],
+			 "University Center": [[680, 915], [730, 848]],
+			 "Meyerhoff Building": [[682, 843], [740, 775]],
+			 "Fine Arts Building": [[610, 840], [675, 775]],
+			 "Performing Arts and Humanities Building": [[440, 890], [575, 800]]		 
+			 
+         };
+ 
+         var descriptions = {
+            //Daniel additions
+             "Greenhouse": "A research facility supporting plant science and biology studies.",
+             "Walker Avenue Apartments": "Apartment-style housing for upperclassmen with modern amenities.",
+             "Walker Avenue Apartments 2": "Apartment-style housing for upperclassmen with modern amenities.",
+             "West Hill Apartments": "Residential community offering suite-style living with study spaces.",
+             "West Hill Apartments 2": "Residential community offering suite-style living with study spaces.",
+             "Terrace Apartments": "Comfortable student apartments close to major campus facilities.",
+             "Terrace Apartments 2": "Comfortable student apartments close to major campus facilities.",
+             "Apartment Community Center": "The front desk of all the apartments besides walker",
+             "Hillside Apartments": "A quiet residential area for students, surrounded by greenery.",
+             "Central Plant": "The heart of UMBC's heating and cooling system operations.",
+             "Albin O. Kuhn Library & Gallery": "The main campus library, offering study spaces and research resources.",
+             "Albin O. Kuhn Library & Gallery 2": "The main campus library, offering study spaces and research resources.",
+             "Army ROTC": "Training center for students pursuing leadership and military careers.",
+             "Baltimore County Police": "Local law enforcement office ensuring campus safety.",
+             "Baltimore County Courthouse": "Government facility for legal and administrative matters.",
+             "Baltimore County Courthouse 2": "Government facility for legal and administrative matters.",
+             "Alumni House": "A space dedicated to UMBC alumni networking and events.",
+			 
+			 //yafet additions
+			 "Erickson Hall": "Location of the Division of Student affairs, handles the UMBC residential life.",
+			 "Chesapeake Hall": "Home to the center for Women In Technology Living-Learning Community; A quiet lifestyle community located on the third floor.",
+			 "Harbor Hall": "Home to several of the Living Learning Communities; Humanities, Intercultural Living Exchange, Visual and Performing Arts, Women Involved in Learning and Leadership.",
+			 "Susquehanna Hall": "Home to the Honors College Living Learning Community and our first-year Meyerhoff Scholars.",
+			 "Susquehanna Hall 2": "Home to the Honors College Living Learning Community and our first-year Meyerhoff Scholars.",
+			 "True Grit's": "UMBC's Dining Hall, provides breakfast, lunch, and dinner.",
+			 "Potomac Hall": "UMBC's only nine month residence hall.",
+			 "Patapsco Hall": "A LEED-certified building and home to several of our Living Learning Communities: Discovery Scholars and STEM. A quiet lifestyle community is located on the ground floor.",
+			 "Student Development & Success Center": "N/A",
+			 "Public Policy Building": "Home to the School of Public Policy.",
+			 "Physics Building": "Home to the department of Physics.",
+			 "The Commons": "Hub of the student life at UMBC. In the middle of campus, the place to go in between classes.",
+			 "The Commons 2": "Hub of the student life at UMBC. In the middle of campus, the place to go in between classes.",
+			 "Academic Services Building": "provides centralized programmatic and systematic support to all credit and non-credit programs.",
 
-    header h1 {
-      margin: 0;
-      font-size: 2rem;
-    }
+			//Christian additions
+			 "Administration Building": "Serves as the central hub for UMBC's administrative operations, housing key offices such as Undergraduate and Graduate Admissions.",
+			 "Retriever Activities Center": "A multi-purpose athletic facility that includes the UMBC Aquatic Complex, gymnasiums, an indoor track, and spaces for recreational and sporting activities.",
+			 "Retriever Activities Center(RAC)": "A multi-purpose athletic facility that includes the UMBC Aquatic Complex, gymnasiums, an indoor track, and spaces for recreational and sporting activities.",
+			 "Sondheim Hall": "Named after Walter Sondheim Jr., this building is part of UMBC's Academic Row and hosts various academic departments.",
+			 "Math & Psychology Building": "Home to the departments of Mathematics, Statistics, and Psychology, featuring classrooms, lecture halls, and faculty offices.",
+			 "Biological Sciences Building": "Dedicated to the Biological Sciences Department, providing laboratories, lecture halls, and research spaces for biological studies.",
+			 "Lecture Hall 1": "A large lecture space used for university-wide presentations and courses, centrally located on campus.",
+			 "Sherman Hall": "Previously known as Academic IV, this building contains classrooms and academic department offices.",
+			 "Information Technology Engineering Building(ITE)": "Supports the College of Engineering and Information Technology, featuring advanced classrooms, labs, and collaborative research spaces.",
+			 "Engineering Building": "Provides resources for engineering programs, including classrooms, laboratories, and faculty offices.",
+			 "University Center": "A central gathering space with dining options, event spaces, and student services.",
+			 "Meyerhoff Building": "Named after the Meyerhoff family, this building houses the Chemistry and Biochemistry Department, with labs, lecture halls, and research facilities.",
+			 "Fine Arts Building": "Houses the departments of Visual Arts and Dance, offering studios, galleries, and performance spaces for artistic exhibitions and performances.",
+			 "Performing Arts and Humanities Building": "Home to departments like Ancient Studies, Dance, English, Music, Philosophy, and Theatre. Includes the Earl and Darielle Linehan Concert Hall, a 375-seat venue for performances."
+			 
+         };
 
-    .container {
-      max-width: 1200px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
+	var entrancePoints = {
+		"Engineering Entrance": [665, 880], "Engineering Entrance_1": [610, 880], "Engineering Entrance_2": [635, 850], "Engineering Entrance_3": [635, 910],
+	        "RAC Entrance": [810, 1030],
+	        "Fine Arts Entrance": [640, 800],
+	};
+ 
+         Object.keys(buildingBounds).forEach(function(building) {
+             var bounds = buildingBounds[building].map(scaleCoordinates);
+             L.rectangle(bounds, {color: "blue", weight: 2, fillOpacity: 0.2}).addTo(map)
+                 .bindPopup("<b>" + building + "</b><br>" + descriptions[building]);
+         });
 
-    .maps-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
-    }
-
-    .map-card {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-      overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .map-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 12px 25px rgba(0,0,0,0.1);
-    }
-
-    .map-card img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .map-card-content {
-      padding: 1.5rem;
-    }
-
-    .map-card-content h2 {
-      font-size: 1.25rem;
-      margin-bottom: 0.5rem;
-      color: #0b3d91;
-    }
-
-    .map-card-content p {
-      font-size: 0.95rem;
-      line-height: 1.4;
-      color: #555;
-    }
-
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
-
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 1.5rem;
-      }
-
-      .map-card-content h2 {
-        font-size: 1.1rem;
-      }
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Welcome to UMBC Campus Maps</h1>
-  </header>
-
-  <div class="container">
-    <div class="maps-container">
-      <a href="building_information_map_page.html" class="map-card">
-        <img src="umbc_map.png.jpg" alt="Outlined Building Map">
-        <div class="map-card-content">
-          <h2>Outlined Building Info Map</h2>
-          <p>This map highlights outlined buildings across campus, explaining their functions and guiding you to the right place.</p>
-        </div>
-      </a>
-
-      <a href="realtime.html" class="map-card">
-        <img src="umbc_map.png.jpg" alt="GPS Map">
-        <div class="map-card-content">
-          <h2>GPS Navigation Map</h2>
-          <p>This real-time GPS-based map helps students navigate UMBC efficiently, with sidewalks, buildings, and entrance overlays.</p>
-        </div>
-      </a>
-    </div>
-  </div>
-</body>
-</html>
+	Object.keys(entrancePoints).forEach(function(entrance) {
+		var coord = scaleCoordinates(entrancePoints[entrance]); // Scale coordinates
+		L.circleMarker(coord, {
+		radius: 3, // Small dot size
+		color: "red", // Temporary visibility
+		fillColor: "red",
+		fillOpacity: 1,
+		interactive: false // Non-clickable
+	}).addTo(map);
+});
+	     
+     </script>
+ </body>
+ </html>
