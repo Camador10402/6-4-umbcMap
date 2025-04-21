@@ -162,14 +162,31 @@
 
   // Add invisible markers to map
   Object.entries(entrancePoints).forEach(([name, coord]) => {
-    var marker = L.circleMarker(coord, {
-      radius: 5,
-      color: 'blue',
-      fillColor: 'blue',
-      fillOpacity: 1,
-      opacity: 0,          // invisible
-      interactive: false   // not clickable
-    }).addTo(entranceLayer);
+	var marker = L.circleMarker(coord, {
+    radius: 5,
+    color: 'blue',
+    fillColor: 'blue',
+    fillOpacity: 0.8,
+    opacity: 1,         // Make visible for testing
+    interactive: true   // Make clickable
+  }).addTo(entranceLayer);
+
+  marker.on('click', function() {
+    const userLocation = turf.point([-76.713, 39.256]); // dummy user coords
+    const destPoint = turf.point([coord[1], coord[0]]); // destination entrance
+
+    const distanceKm = turf.distance(userLocation, destPoint, { units: 'kilometers' });
+    const speedKmh = 1.4 * 3.6; // convert m/s to km/h
+    const etaMinutes = (distanceKm / speedKmh) * 60;
+
+    const minutes = Math.floor(etaMinutes);
+    const seconds = Math.round((etaMinutes - minutes) * 60);
+
+    marker.bindPopup(`
+      <b>${name}</b><br>
+      ETA: ${minutes} min ${seconds} sec
+    `).openPopup();
+  });
 
     entranceMarkers[name] = marker; // Save reference
   });
