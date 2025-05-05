@@ -6,24 +6,23 @@
   <title>UMBC GPS Campus Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-	  .home-button {
-	  position: absolute;
-	  top: 10px;
-	  right: 10px;
-	  background-color: #007BFF;
-	  color: white;
-	  padding: 10px 15px;
-	  border: none;
-	  border-radius: 5px;
-	  font-size: 16px;
-	  cursor: pointer;
-	  text-decoration: none;
-	  z-index: 1000;
-	}
-	.home-button:hover {
-	  background-color: #0056b3;
-	}
-
+    .home-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #007BFF;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      text-decoration: none;
+      z-index: 1000;
+    }
+    .home-button:hover {
+      background-color: #0056b3;
+    }
     body, html {
       margin: 0;
       padding: 0;
@@ -32,34 +31,41 @@
     #map {
       height: 100vh;
     }
+    #locationSelector {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1001;
+      font-size: 16px;
+      padding: 5px;
+    }
   </style>
 </head>
 <body>
 
+<select id="locationSelector">
+  <option value="">Select your location</option>
+</select>
 <div id="map"></div>
 <a href="home_page.html" class="home-button">Back to Home</a>
 
 <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  // Initialize the map centered around UMBC (approx)
-  var map = L.map('map', {
-  center: [39.2557, -76.7110],
-  zoom: 17,
-  maxZoom: 22, // allows deeper zoom-in
-  minZoom: 14  // prevents zooming too far out
-});
+  const map = L.map('map', {
+    center: [39.2557, -76.7110],
+    zoom: 17,
+    maxZoom: 22,
+    minZoom: 14
+  });
 
-  // Load OpenStreetMap tiles
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
-	maxZoom: 22 // Need to match this to the new max zoom
+    maxZoom: 22
   }).addTo(map);
 
-
-
   // Entrance coordinates
-  var entrancePoints = {
+  const entrancePoints = {
 	"University Center entrance 1": [39.254121, -76.713030], "University Center entrance 2": [39.254396, -76.713047], "University Center entrance 3": [39.254639, -76.713211],
 	"University Center entrance 4": [39.254391, -76.713456], "University Center entrance 5": [39.254041, -76.713235],
 	
@@ -154,116 +160,120 @@
 
   };
 
-  // Dictionary to store invisible markers for future toggling
-  var entranceMarkers = {};
 
-  // Layer group to manage entrance markers
-  var entranceLayer = L.layerGroup().addTo(map);
+  const entranceMarkers = {};
+  const entranceLayer = L.layerGroup().addTo(map);
+  const locationSelector = document.getElementById('locationSelector');
+  let selectedLocation = null;
+  let selectedMarker = null;
+  let pathLayer = null;
+  let sidewalkData = null;
 
-  // Add invisible markers to map
+  // Populate dropdown
+  for (let name in entrancePoints) {
+    const option = document.createElement('option');
+    option.value = name;
+    option.text = name;
+    locationSelector.appendChild(option);
+  }
+
+  locationSelector.addEventListener('change', function() {
+    if (selectedMarker) {
+      map.removeLayer(selectedMarker);
+    }
+    if (pathLayer) {
+      map.removeLayer(pathLayer);
+    }
+    const name = this.value;
+    if (name && entrancePoints[name]) {
+      selectedLocation = entrancePoints[name];
+      selectedMarker = L.circleMarker(selectedLocation, {
+        radius: 6,
+        color: 'red',
+        fillColor: 'red',
+        fillOpacity: 0.9
+      }).bindPopup("You are here").addTo(map).openPopup();
+      map.setView(selectedLocation, 18);
+    }
+  });
+
   Object.entries(entrancePoints).forEach(([name, coord]) => {
-	var marker = L.circleMarker(coord, {
-    radius: 5,
-    color: 'blue',
-    fillColor: 'blue',
-    fillOpacity: 0.8,
-    opacity: 1,         // Make visible for testing
-    interactive: true   // Make clickable
-  }).addTo(entranceLayer);
+    const marker = L.circleMarker(coord, {
+      radius: 5,
+      color: 'blue',
+      fillColor: 'blue',
+      fillOpacity: 0.8,
+      opacity: 1,
+      interactive: true
+    }).addTo(entranceLayer);
 
-  marker.on('click', function() {
-    const userLocation = turf.point([-76.713, 39.256]); // dummy user coords
-    const destPoint = turf.point([coord[1], coord[0]]); // destination entrance
+    marker.on('click', function () {
+      if (!selectedLocation) {
+        alert("Please select your starting location from the dropdown.");
+        return;
+      }
 
-    const distanceKm = turf.distance(userLocation, destPoint, { units: 'kilometers' });
-    const speedKmh = 1.4 * 3.6; // convert m/s to km/h
-    const etaMinutes = (distanceKm / speedKmh) * 60;
+      const start = turf.point([selectedLocation[1], selectedLocation[0]]);
+      const end = turf.point([coord[1], coord[0]]);
 
-    const minutes = Math.floor(etaMinutes);
-    const seconds = Math.round((etaMinutes - minutes) * 60);
+      if (!sidewalkData) return;
 
-    marker.bindPopup(`
-      <b>${name}</b><br>
-      ETA: ${minutes} min ${seconds} sec
-    `).openPopup();
+      let minPath = null;
+      let minDist = Infinity;
+
+      sidewalkData.features.forEach(feature => {
+        if (feature.geometry.type === "LineString") {
+          const line = turf.lineString(feature.geometry.coordinates);
+          const startSnap = turf.nearestPointOnLine(line, start);
+          const endSnap = turf.nearestPointOnLine(line, end);
+
+          const path = turf.lineSlice(startSnap, endSnap, line);
+          const dist = turf.length(path, { units: 'kilometers' });
+
+          if (dist < minDist && dist > 0) {
+            minDist = dist;
+            minPath = path;
+          }
+        }
+      });
+
+      if (minPath) {
+        if (pathLayer) map.removeLayer(pathLayer);
+        pathLayer = L.geoJSON(minPath, {
+          style: {
+            color: 'red',
+            weight: 4,
+            opacity: 0.9
+          }
+        }).addTo(map);
+
+        const etaMinutes = (minDist / (1.4 * 3.6)) * 60;
+        const minutes = Math.floor(etaMinutes);
+        const seconds = Math.round((etaMinutes - minutes) * 60);
+
+        marker.bindPopup(`
+          <b>${name}</b><br>
+          Shortest Path: ${minDist.toFixed(2)} km<br>
+          ETA: ${minutes} min ${seconds} sec
+        `).openPopup();
+      }
+    });
+
+    entranceMarkers[name] = marker;
   });
 
-    entranceMarkers[name] = marker; // Save reference
-  });
-
-  // === Map Click Logger ===
-  map.on('click', function(e) {
-    var lat = e.latlng.lat.toFixed(6);
-    var lng = e.latlng.lng.toFixed(6);
-    alert(`Clicked at: [${lat}, ${lng}]`);
-  });
-
-  
-	let sidewalkData;
-	fetch('umbc_sidewalks.geojson')
-	  .then(res => res.json())
-	  .then(data => {
-		sidewalkData = data;
-		L.geoJSON(data, {
-		  style: {
-			color: 'green',
-			weight: 3,
-			opacity: 0.7
-		  }
-		}).addTo(map);
-		
-		connectEntrancesToSidewalks();
-	  });
-	  
-	fetch('umbc_steps.geojson')
-	  .then(res => res.json())
-	  .then(data => {
-		L.geoJSON(data, {
-		  style: {
-			color: 'purple',
-			weight: 3,
-			dashArray: '4',
-			opacity: 0.7
-		  }
-		}).addTo(map);
-	  });
-	  
-	function connectEntrancesToSidewalks() {
-	  Object.entries(entrancePoints).forEach(([name, coord]) => {
-		const entrancePoint = turf.point([coord[1], coord[0]]); // GeoJSON format is [lng, lat]
-
-		let closestPoint = null;
-		let minDist = Infinity;
-
-		sidewalkData.features.forEach(feature => {
-		  if (feature.geometry.type === "LineString") {
-			const snapped = turf.nearestPointOnLine(feature, entrancePoint);
-			const dist = turf.distance(entrancePoint, snapped);
-			if (dist < minDist) {
-			  minDist = dist;
-			  closestPoint = snapped;
-			}
-		  }
-		});
-
-		if (closestPoint) {
-		  const snappedLatLng = [closestPoint.geometry.coordinates[1], closestPoint.geometry.coordinates[0]];
-		  
-		  // Optional: draw a line from entrance to the snapped point
-		  L.polyline([coord, snappedLatLng], {
-			color: 'blue',
-			weight: 2,
-			dashArray: '5,5',
-			opacity: 0.5
-		  }).addTo(map);
-		}
-	  });
-	}
-
-
-  // === Example: Show a marker when selected as destination ===
-  // entranceMarkers["Library Entrance"].setStyle({ opacity: 1, fillOpacity: 0.9 });
-
+  fetch('umbc_sidewalks.geojson')
+    .then(res => res.json())
+    .then(data => {
+      sidewalkData = data;
+      L.geoJSON(data, {
+        style: {
+          color: 'green',
+          weight: 3,
+          opacity: 0.7
+        }
+      }).addTo(map);
+    });
 </script>
 </body>
 </html>
