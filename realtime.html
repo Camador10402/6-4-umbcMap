@@ -93,7 +93,7 @@
     statusMessage.style.backgroundColor = isError ? 'rgba(255, 200, 200, 0.9)' : 'rgba(255, 255, 255, 0.8)';
     setTimeout(() => {
       statusMessage.style.display = 'none';
-    }, 5000);
+    }, 25000);
   }
 
   function roundCoord(coord, precision = 6) {
@@ -202,7 +202,7 @@
     
     Object.entries(entrancePoints).forEach(([name, coord]) => {
       const marker = L.circleMarker(coord, {
-        radius: 5, color: 'black', fillColor: 'blue', fillOpacity: 0
+        radius: 5, color: 'tansparent', fillColor: 'black', fillOpacity: 0
       }).addTo(map);
       entranceMarkers[name] = marker;
     });
@@ -434,7 +434,16 @@
     
     // Show route length
     const routeLength = turf.length(turf.lineString(path), { units: 'kilometers' });
-    showStatus(`Route found! Distance: ${(routeLength * 1000).toFixed(0)} meters`);
+    const distanceMeters = routeLength * 1000;
+	const walkingSpeed = 1.4; // meters per second
+	const etaSeconds = distanceMeters / walkingSpeed;
+
+	// Convert to minutes and seconds
+	const etaMinutes = Math.floor(etaSeconds / 60);
+	const etaRemainderSeconds = Math.round(etaSeconds % 60);
+
+	showStatus(`Route found! Distance: ${distanceMeters.toFixed(0)} meters. ETA: ${etaMinutes} min ${etaRemainderSeconds} sec.`);
+
   }
 
   // UPDATED: Map click handler
