@@ -99,7 +99,7 @@
   <div class="container">
     <div class="maps-container">
       <a href="building_information_map_page.html" class="map-card">
-        <img src="umbc_map.png.jpg" alt="Outlined Building Map">
+        <img src="umbc_map.jpg" alt="Outlined Building Map">
         <div class="map-card-content">
           <h2>Outlined Building Info Map</h2>
           <p>This map highlights outlined buildings across campus, explaining their functions and guiding you to the right place.</p>
@@ -107,7 +107,7 @@
       </a>
 
       <a href="realtime.html" class="map-card">
-        <img src="umbc_map.png.jpg" alt="GPS Map">
+        <img src="umbc_map.jpg" alt="GPS Map">
         <div class="map-card-content">
           <h2>GPS Navigation Map</h2>
           <p>This real-time GPS-based map helps students navigate UMBC efficiently, with sidewalks, buildings, and entrance overlays.</p>
@@ -117,3 +117,5 @@
   </div>
 </body>
 </html>
+
+
