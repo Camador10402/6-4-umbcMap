@@ -23,6 +23,7 @@
     .home-button:hover {
       background-color: #0056b3;
     }
+
     body, html {
       margin: 0;
       padding: 0;
@@ -31,41 +32,57 @@
     #map {
       height: 100vh;
     }
-    #locationSelector {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1001;
-      font-size: 16px;
-      padding: 5px;
-    }
   </style>
 </head>
 <body>
 
-<select id="locationSelector">
-  <option value="">Select your location</option>
-</select>
 <div id="map"></div>
+<select id="destinationDropdown" style="position:absolute; top:60px; right:10px; z-index:1000; padding:8px; font-size:16px;">
+  <option disabled selected>Select a destination</option>
+</select>
+
+<button id="clearStartBtn" style="position:absolute; top:100px; right:10px; z-index:1000; padding:8px; font-size:16px;">
+  Clear Start
+</button>
+
 <a href="home_page.html" class="home-button">Back to Home</a>
 
+<script src="https://unpkg.com/graphlib/dist/graphlib.min.js"></script>
 <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  const map = L.map('map', {
-    center: [39.2557, -76.7110],
-    zoom: 17,
-    maxZoom: 22,
-    minZoom: 14
-  });
-
+  const map = L.map('map').setView([39.2557, -76.7110], 17);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
     maxZoom: 22
   }).addTo(map);
 
-  // Entrance coordinates
-  const entrancePoints = {
+  let entrancePoints = {};
+  let snappedEntrancePoints = {};
+  let entranceMarkers = {};
+  let userStartPoint = null;
+  let routeLine = null; 
+  let graph = new graphlib.Graph({ directed: false });
+  let buildingNodeMap = {};
+
+  let walkableNetwork = [];
+  const sidewalkUrl = 'umbc_sidewalks.geojson';
+  const stairsUrl = 'umbc_steps.geojson';
+
+  const dropdown = document.getElementById('destinationDropdown');
+
+  function roundCoord(coord, precision = 6) {
+    return [parseFloat(coord[0].toFixed(precision)), parseFloat(coord[1].toFixed(precision))];
+  }
+
+	function coordToKey(coord) {
+	  return `${coord[0].toFixed(6)},${coord[1].toFixed(6)}`;
+	}
+
+
+  function loadEntrances() {
+    // NOTE: This can be replaced by a fetch or hardcoded as in your previous full version
+    entrancePoints = {	
 	"University Center entrance 1": [39.254121, -76.713030], "University Center entrance 2": [39.254396, -76.713047], "University Center entrance 3": [39.254639, -76.713211],
 	"University Center entrance 4": [39.254391, -76.713456], "University Center entrance 5": [39.254041, -76.713235],
 	
@@ -73,6 +90,7 @@
 	"Sherman Hall entrance 4": [39.253458, -76.713656], "Sherman Hall entrance 5": [39.253514, -76.713852], "Sherman Hall entrance 6": [39.253958, -76.713639], 
 	
 	"Performing Arts & Humanities entrance 1": [39.255138, -76.714628], "Performing Arts & Humanities entrance 2": [39.255248, -76.714782],
+  
 	"Retrivers Activities Center(RAC) entrance 1": [39.252382, -76.712750],  "Retrivers Activities Center(RAC) entrance 2": [39.253113, -76.712750],
 	
 	"Administration Building entrance 1": [39.252947, -76.713367], "Administration Building entrance 2": [39.253068, -76.713313], "Administration Building entrance 3": [39.252917, -76.712948],
@@ -94,7 +112,7 @@
 	
 	"Fine Arts Building entrance 1": [39.255212, -76.713242], "Fine Arts Building entrance 2": [39.254923, -76.713373], "Fine Arts Building entrance 3": [39.254879, -76.713700],
 	"Fine Arts Building entrance 4": [39.255461, -76.713920], "Fine Arts Building entrance 5": [39.255406, -76.713452], "Fine Arts Building entrance 6": [39.255092, -76.714089],
-
+	
 	//yafet additions
 	"Public Policy Building entrance 1": [39.255104, -76.709295], "Public Policy Entrance 2": [39.255096, -76.709167], "Public Policy Entrance 3": [39.255206, -76.709489], "Public Policy Entrance 4": [39.255315, -76.709117],
 	
@@ -123,157 +141,310 @@
 	"Erickson Hall entrance 1": [39.256642, -76.709401], "Erickson Hall entrance 2": [39.256780, -76.710036], "Erickson Hall entrance 3": [39.256833, -76.710221], "Erickson Hall entrance 4": [39.257010, -76.709798],
 	
   //Daniel additions
-  "Greenhouse Entrance": [39.258353, -76.713557], 
-  "Albin O. Kuhn Library & Gallery": [39.256294, -76.711528],
-  "Deep Creek Entrance": [39.257684, -76.708874],
-  "Elk Entrance": [39.257862, -76.709539],
-  "Breton Entrance": [39.258105, -76.708568],
-  "Casselman": [39.257987, -76.709204],
-  "Sideling": [39.258446, -76.708654],
-  "Manokin Entrance": [39.258668, -76.709082],
-  "Pocomoke": [39.258350, -76.709279],
-  "Patuxent": [39.258169, -76.709480],
-  "Wicomico": [39.257919, -76.709735],
-  "Antietam": [39.257742, -76.710013],
-  "Sassafras": [39.258028, -76.710084],
-  "Chincoteague": [39.257611, -76.710333],
-  "Tuckahoe": [39.257697, -76.710955],
-  "Gunpowder": [39.257756, -76.711158],
-  "Monocacy": [39.258048, -76.710924],
-  "Nanticoke": [39.257866, -76.711517],
-  "Central Plant": [39.257597, -76.713747],
-  "Choptank 1": [39.258919, -76.713129], "Choptank 2": [39.258708, -76.712963],
-  "Magothy 1": [39.259152, -76.712619], "Magothy 2": [39.258939, -76.712457],
-  "Tangier 1": [39.259016, -76.712924], "Tangier 2": [39.258800, -76.712760],
-  "Wye 1": [39.258617, -76.712662], "Wye 2": [39.258747, -76.712389],
-  "Chester 1": [39.258803, -76.711881], "Chester 2": [39.258936, -76.711602],
-  "Apartment Community Center": [39.258237, -76.712050],
-  "Walker Avenue Apartments I 1": [39.259458, -76.714054], "Walker Avenue Apartments I 2 ":[39.259400, -76.714122], "Walker Avenue Apartments I 3 ":[39.259674, -76.713816], "Walker Avenue Apartments I 4 ":[39.259547, -76.713509], "Walker Avenue Apartments I 5 ":[39.259432, -76.713601],
-  "Walker Avenue Apartments II 1": [39.258872, -76.714339], "Walker Avenue Apartments II 2": [39.258990, -76.714673], "Walker Avenue Apartments II 3": [39.258856, -76.714793],
-  "Walker Avenue Apartments III": [39.258576, -76.715179],
-  "Baltimore County Court House": [39.260138, -76.715109],
-  "ROTC House": [39.258917, -76.717140],
-  "Recreation House": [39.258538, -76.717236],
-  "Baltimore County Police": [39.259789, -76.716407],
-  "Alumni House": [39.258282, -76.717763]
+  "Greenhouse Entrance entrance 1": [39.258353, -76.713557], 
+  "Albin O. Kuhn Library & Gallery entrance 1": [39.256294, -76.711528],
+  "Deep Creek Entrance entrance 1": [39.257684, -76.708874],
+  "Elk Entrance entrance 1": [39.257862, -76.709539],
+  "Breton Entrance entrance 1": [39.258105, -76.708568],
+  "Casselman entrance 1": [39.257987, -76.709204],
+  "Sideling entrance 1": [39.258446, -76.708654],
+  "Manokin Entrance entrance 1": [39.258668, -76.709082],
+  "Pocomoke entrance 1": [39.258350, -76.709279],
+  "Patuxent entrance 1": [39.258169, -76.709480],
+  "Wicomico entrance 1": [39.257919, -76.709735],
+  "Antietam entrance 1": [39.257742, -76.710013],
+  "Sassafras entrance 1": [39.258028, -76.710084],
+  "Chincoteague entrance 1": [39.257611, -76.710333],
+  "Tuckahoe entrance 1": [39.257697, -76.710955],
+  "Gunpowder entrance 1": [39.257756, -76.711158],
+  "Monocacy entrance 1": [39.258048, -76.710924],
+  "Nanticoke entrance 1": [39.257866, -76.711517],
+  "Central Plant entrance 1": [39.257597, -76.713747],
+  "Choptank entrance 1": [39.258919, -76.713129], "Choptank 2": [39.258708, -76.712963],
+  "Magothy entrance 1": [39.259152, -76.712619], "Magothy 2": [39.258939, -76.712457],
+  "Tangier entrance 1": [39.259016, -76.712924], "Tangier 2": [39.258800, -76.712760],
+  "Wye entrance 1": [39.258617, -76.712662], "Wye 2": [39.258747, -76.712389],
+  "Chester entrance 1": [39.258803, -76.711881], "Chester 2": [39.258936, -76.711602],
+  "Apartment Community Center entrance 1": [39.258237, -76.712050],
+  "Walker Avenue Apartments I entrance 1": [39.259458, -76.714054], "Walker Avenue Apartments I 2 ":[39.259400, -76.714122], "Walker Avenue Apartments I 3 ":[39.259674, -76.713816], "Walker Avenue Apartments I 4 ":[39.259547, -76.713509], "Walker Avenue Apartments I 5 ":[39.259432, -76.713601],
+  "Walker Avenue Apartments II entrance 1": [39.258872, -76.714339], "Walker Avenue Apartments II 2": [39.258990, -76.714673], "Walker Avenue Apartments II 3": [39.258856, -76.714793],
+  "Walker Avenue Apartments III entrance 1": [39.258576, -76.715179],
+  "Baltimore County Court House entrance 1": [39.260138, -76.715109],
+  "ROTC House entrance 1": [39.258917, -76.717140],
+  "Recreation House entrance 1": [39.258538, -76.717236],
+  "Baltimore County Police entrance 1": [39.259789, -76.716407],
+  "Alumni House entrance 1": [39.258282, -76.717763]
+	
 
-
-  };
-
-
-  const entranceMarkers = {};
-  const entranceLayer = L.layerGroup().addTo(map);
-  const locationSelector = document.getElementById('locationSelector');
-  let selectedLocation = null;
-  let selectedMarker = null;
-  let pathLayer = null;
-  let sidewalkData = null;
-
-  // Populate dropdown
-  for (let name in entrancePoints) {
-    const option = document.createElement('option');
-    option.value = name;
-    option.text = name;
-    locationSelector.appendChild(option);
+    };
+    Object.entries(entrancePoints).forEach(([name, coord]) => {
+      const marker = L.circleMarker(coord, {
+        radius: 5, color: 'transparent', fillColor: 'blue', fillOpacity: 0
+      }).addTo(map);
+      entranceMarkers[name] = marker;
+    });
   }
 
-  locationSelector.addEventListener('change', function() {
-    if (selectedMarker) {
-      map.removeLayer(selectedMarker);
-    }
-    if (pathLayer) {
-      map.removeLayer(pathLayer);
-    }
-    const name = this.value;
-    if (name && entrancePoints[name]) {
-      selectedLocation = entrancePoints[name];
-      selectedMarker = L.circleMarker(selectedLocation, {
-        radius: 6,
-        color: 'red',
-        fillColor: 'red',
-        fillOpacity: 0.9
-      }).bindPopup("You are here").addTo(map).openPopup();
-      map.setView(selectedLocation, 18);
-    }
-  });
+	function populateDropdown() {
+	  Object.keys(buildingNodeMap).sort().forEach(name => {
+		const option = document.createElement('option');
+		option.value = name;
+		option.textContent = name;
+		dropdown.appendChild(option);
+	  });
+	}
 
-  Object.entries(entrancePoints).forEach(([name, coord]) => {
-    const marker = L.circleMarker(coord, {
-      radius: 5,
-      color: 'blue',
-      fillColor: 'blue',
-      fillOpacity: 0.8,
-      opacity: 1,
-      interactive: true
-    }).addTo(entranceLayer);
 
-    marker.on('click', function () {
-      if (!selectedLocation) {
-        alert("Please select your starting location from the dropdown.");
-        return;
-      }
+	function buildGraph(features, spacing = 0.00005) {
+	  features.forEach(feature => {
+		const coords = feature.geometry.coordinates;
+		for (let i = 0; i < coords.length - 1; i++) {
+		  const start = roundCoord(coords[i]);
+		  const end = roundCoord(coords[i + 1]);
+		  const startKey = coordToKey(start);
+		  const endKey = coordToKey(end);
+		  const dist = turf.distance(turf.point(start), turf.point(end));
+		  graph.setNode(startKey, start);
+		  graph.setNode(endKey, end);
+		  graph.setEdge(startKey, endKey, dist);
+		  graph.setEdge(endKey, startKey, dist); // bidirectional
+		}
+	  });
+	
 
-      const start = turf.point([selectedLocation[1], selectedLocation[0]]);
-      const end = turf.point([coord[1], coord[0]]);
 
-      if (!sidewalkData) return;
+	  // 🔍 Debug: Report any isolated nodes
+	  let disconnected = 0;
+	  graph.nodes().forEach(key => {
+		const neighbors = graph.successors(key);
+		if (!neighbors || neighbors.length === 0) {
+		  disconnected++;
+		  console.warn("❌ Disconnected node:", key);
+		}
+	  });
+	  console.log("🔎 Total nodes:", graph.nodeCount());
+	  console.log("🧯 Disconnected nodes:", disconnected);
+	}
+	
+	function connectGraphComponents(graph, components) {
+	  if (components.length <= 1) return;
 
-      let minPath = null;
-      let minDist = Infinity;
+	  for (let i = 0; i < components.length - 1; i++) {
+		const groupA = components[i];
+		const groupB = components[i + 1];
 
-      sidewalkData.features.forEach(feature => {
-        if (feature.geometry.type === "LineString") {
-          const line = turf.lineString(feature.geometry.coordinates);
-          const startSnap = turf.nearestPointOnLine(line, start);
-          const endSnap = turf.nearestPointOnLine(line, end);
+		let minDist = Infinity;
+		let bestPair = null;
 
-          const path = turf.lineSlice(startSnap, endSnap, line);
-          const dist = turf.length(path, { units: 'kilometers' });
+		for (const keyA of groupA) {
+		  for (const keyB of groupB) {
+			const coordA = graph.node(keyA);
+			const coordB = graph.node(keyB);
+			const dist = turf.distance(turf.point(coordA), turf.point(coordB));
+			if (dist < minDist) {
+			  minDist = dist;
+			  bestPair = [keyA, keyB];
+			}
+		  }
+		}
 
-          if (dist < minDist && dist > 0) {
-            minDist = dist;
-            minPath = path;
-          }
-        }
-      });
+		if (bestPair) {
+		  const [keyA, keyB] = bestPair;
+		  graph.setEdge(keyA, keyB, minDist);
+		  graph.setEdge(keyB, keyA, minDist); // bidirectional
+		  console.log(`🔗 Connected cluster ${i} and ${i + 1}: ${keyA} ↔ ${keyB}`);
+		}
+	  }
+	}
 
-      if (minPath) {
-        if (pathLayer) map.removeLayer(pathLayer);
-        pathLayer = L.geoJSON(minPath, {
-          style: {
-            color: 'red',
-            weight: 4,
-            opacity: 0.9
-          }
-        }).addTo(map);
 
-        const etaMinutes = (minDist / (1.4 * 3.6)) * 60;
-        const minutes = Math.floor(etaMinutes);
-        const seconds = Math.round((etaMinutes - minutes) * 60);
 
-        marker.bindPopup(`
-          <b>${name}</b><br>
-          Shortest Path: ${minDist.toFixed(2)} km<br>
-          ETA: ${minutes} min ${seconds} sec
-        `).openPopup();
+  function snapToGraph(coord) {
+    let minDist = Infinity;
+    let closestKey = null;
+    graph.nodes().forEach(key => {
+      const node = graph.node(key);
+      const dist = turf.distance(turf.point(coord), turf.point(node));
+      if (dist < minDist) {
+        minDist = dist;
+        closestKey = key;
       }
     });
+    return closestKey;
+  }
 
-    entranceMarkers[name] = marker;
-  });
+function dijkstraWithFallback(startKey, endKey) {
+  const dist = {}, prev = {}, pq = new Set(graph.nodes());
+  graph.nodes().forEach(n => dist[n] = Infinity);
+  dist[startKey] = 0;
 
-  fetch('umbc_sidewalks.geojson')
-    .then(res => res.json())
-    .then(data => {
-      sidewalkData = data;
-      L.geoJSON(data, {
-        style: {
-          color: 'green',
-          weight: 3,
-          opacity: 0.7
-        }
-      }).addTo(map);
+  while (pq.size > 0) {
+    let u = [...pq].reduce((a, b) => dist[a] < dist[b] ? a : b);
+    pq.delete(u);
+    (graph.successors(u) || []).forEach(v => {
+      const alt = dist[u] + graph.edge(u, v);
+      if (alt < dist[v]) {
+        dist[v] = alt;
+        prev[v] = u;
+      }
     });
+  }
+
+	  // No path? Attempt brute-force reconnect
+	  if (!prev[endKey]) {
+		console.warn("❌ Dijkstra failed, retrying with fallback bridging...");
+
+		const components = graphlib.alg.components(graph);
+		const startComponent = components.find(c => c.includes(startKey));
+		const endComponent = components.find(c => c.includes(endKey));
+
+		if (startComponent && endComponent && startComponent !== endComponent) {
+		  let bestPair = null, minDist = Infinity;
+		  for (let keyA of startComponent) {
+			for (let keyB of endComponent) {
+			  const distAB = turf.distance(turf.point(graph.node(keyA)), turf.point(graph.node(keyB)));
+			  if (distAB < minDist) {
+				minDist = distAB;
+				bestPair = [keyA, keyB];
+			  }
+			}
+		  }
+
+		  if (bestPair) {
+			const [a, b] = bestPair;
+			graph.setEdge(a, b, minDist);
+			graph.setEdge(b, a, minDist);
+			console.warn(`🔗 Fallback edge created: ${a} ↔ ${b}`);
+
+			// Rerun Dijkstra after adding fallback connection
+			return dijkstraWithFallback(startKey, endKey);
+		  }
+		}
+	  }
+
+	  return prev;
+	}
+
+
+	function drawPath(startKey, endKey, prev) {
+	  const path = [];
+	  let u = endKey;
+	  while (u) {
+		path.unshift(graph.node(u));
+		u = prev[u];
+	  }
+
+	  if (routeLine) {
+		map.removeLayer(routeLine); // remove previous route if it exists
+	  }
+
+	  routeLine = L.polyline(path.map(p => [p[1], p[0]]), {
+		color: 'red', weight: 4
+	  }).addTo(map);
+	}
+
+
+	dropdown.addEventListener('change', () => {
+	  const destCoord = buildingNodeMap[dropdown.value];
+	  const destKey = coordToKey(destCoord);
+	  if (userStartPoint) {
+		const startKey = coordToKey(userStartPoint);
+		const prev = dijkstraWithFallback(startKey, destKey);
+		drawPath(startKey, destKey, prev);
+
+		// 🔦 Highlight matching markers
+		Object.entries(entranceMarkers).forEach(([name, marker]) => {
+		  marker.setStyle({ fillOpacity: name.includes(dropdown.value) ? 1 : 0 });
+		});
+	  }
+	});
+
+
+
+	let userStartMarker = null;  // Add this above your event listener
+
+	map.on('click', e => {
+	  if (userStartPoint !== null) return; // prevent new start point if one exists
+
+	  const coord = [e.latlng.lng, e.latlng.lat];
+	  const snappedKey = snapToGraph(coord);
+	  if (snappedKey) {
+		userStartPoint = graph.node(snappedKey);
+		userStartMarker = L.circleMarker([userStartPoint[1], userStartPoint[0]], {
+		  radius: 6, color: 'orange', fillColor: 'orange', fillOpacity: 0.9
+		}).addTo(map);
+	  }
+	});
+
+	document.getElementById('clearStartBtn').addEventListener('click', () => {
+	  if (userStartMarker) {
+		map.removeLayer(userStartMarker);
+		userStartMarker = null;
+	  }
+	  if (routeLine) {
+		map.removeLayer(routeLine);
+		routeLine = null;
+	  }
+	  userStartPoint = null;
+	});
+
+
+	Promise.all([
+	  fetch(sidewalkUrl).then(r => r.json()),
+	  fetch(stairsUrl).then(r => r.json())
+	]).then(([sidewalks, stairs]) => {
+	  const allFeatures = sidewalks.features.concat(stairs.features);
+	  L.geoJSON({ type: "FeatureCollection", features: allFeatures }).addTo(map);
+
+	  buildGraph(allFeatures);
+	  const components = graphlib.alg.components(graph);
+		console.log("🧯 Total connected subgraphs:", components.length);
+
+		if (components.length > 1) {
+		  console.warn("⚠️ Some clusters are disconnected — patching them now...");
+		  connectGraphComponents(graph, components);
+		}
+
+
+	  // 🔍 Visualize graph nodes
+	  graph.nodes().forEach(key => {
+		const coord = graph.node(key);
+		L.circleMarker([coord[1], coord[0]], {
+		  radius: 2,
+		  color: 'black',
+		  fillColor: 'black',
+		  fillOpacity: 0.6
+		}).addTo(map);
+	  });
+
+	  loadEntrances();
+
+		Object.entries(entrancePoints).forEach(([name, latlng]) => {
+		  if (name.includes('entrance 1')) {
+			const buildingName = name.split(' entrance')[0];
+			const key = snapToGraph([latlng[1], latlng[0]]);
+			if (key) {
+			  buildingNodeMap[buildingName] = graph.node(key);
+			}
+		  }
+		});
+
+
+	  populateDropdown();
+	});
+
+  
+  
+	  document.getElementById('clearStartBtn').addEventListener('click', () => {
+	  if (userStartMarker) {
+		map.removeLayer(userStartMarker);
+		userStartMarker = null;
+	  }
+	  userStartPoint = null;
+	});
+
+ 
+
 </script>
 </body>
 </html>
