@@ -87,7 +87,9 @@ HTML/CSS/JavaScript – Core technologies
 ├── umbc_sidewalks.geojson  
 ├── umbc_steps.geojson  
 └── README.md
+
 👥 Team Contributors
+
 Christian Amador
 
 Yafet Bedasso
